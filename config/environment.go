@@ -46,7 +46,7 @@ func ParseStringData() map[string]string {
 func ConfigureRootCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "secretpublisher",
-		Short: "\nsecretpublisher is a command line tool to interact with secretreceiver",
+		Short: "\nsecretpublisher is a command line tool to interact with Secret Receiver",
 		RunE:  run,
 	}
 	cmd.PersistentFlags().StringVar(&EncodingRequest, "encodingRequest", os.Getenv("ENCODING_REQUEST"), "use ENCODING_REQUEST environment variable")

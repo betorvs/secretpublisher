@@ -1,9 +1,9 @@
-secretpublisher
-=============
+Secret Publisher
+===============
 
 Travis-CI: [![Build Status](https://travis-ci.org/betorvs/secretpublisher.svg?branch=master)](https://travis-ci.org/betorvs/secretpublisher)
 
-Command line tool to use secretReceiver
+Command line tool to use [Secret Receiver][1]
 
 
 # Build
@@ -14,14 +14,14 @@ go build
 
 # Environment variables
 
-*ENCODING_REQUEST* is used to accepted only encoded requests. To send requests encoded, use [secretpublisher](githut.com/betorvs/secretpublisher) command line.
+*ENCODING_REQUEST* is used to accepted only encoded requests. 
 
 # How to use this command
 
 ```sh
 $ secretpublisher --help
 
-secretpublisher is a command line tool to interact with secretreceiver
+secretpublisher is a command line tool to interact with Secret Receiver
 
 Usage:
   secretpublisher [flags]
@@ -46,3 +46,6 @@ Flags:
 
 Use "secretpublisher [command] --help" for more information about a command.
 ```
+
+
+[1]: [https://github.com/betorvs/secretreceiver]
