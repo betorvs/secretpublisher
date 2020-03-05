@@ -1,0 +1,4 @@
+.vscode*
+secretpublisher
+dist
+localvar
