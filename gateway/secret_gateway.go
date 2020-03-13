@@ -50,6 +50,10 @@ func (repo Repository) GetSecretByName(secret string, namespace string) (string,
 	if config.Debug {
 		fmt.Printf("[SECRETRECEIVER] Response Code: %s, Body Response: %s \n", resp.Status, res)
 	}
+	if resp.StatusCode >= 400 {
+		errLocal := fmt.Errorf("%s", resp.Status)
+		return "", errLocal
+	}
 	defer resp.Body.Close()
 	return res, nil
 }
@@ -83,12 +87,16 @@ func (repo Repository) PostOrPUTSecret(method string, secret string, body []byte
 		s := string(bodyText)
 		fmt.Printf("[SECRETRECEIVER] Response Code: %s, Body Response: %s \n", resp.Status, s)
 	}
+	if resp.StatusCode > 204 {
+		errLocal := fmt.Errorf("%s", resp.Status)
+		return errLocal
+	}
 	defer resp.Body.Close()
 	return nil
 }
 
-// DeleteSecret func
-func (repo Repository) DeleteSecret(secret string, namespace string) error {
+// DeleteSecretK8S func
+func (repo Repository) DeleteSecretK8S(secret string, namespace string) error {
 	url := fmt.Sprintf("%s/%s/%s", config.ReceiverURL, namespace, secret)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -109,6 +117,10 @@ func (repo Repository) DeleteSecret(secret string, namespace string) error {
 	}
 	if config.Debug {
 		fmt.Printf("[SECRETRECEIVER] Response: %s \n", resp.Status)
+	}
+	if resp.StatusCode > 204 {
+		errLocal := fmt.Errorf("%s", resp.Status)
+		return errLocal
 	}
 	defer resp.Body.Close()
 	return nil

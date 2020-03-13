@@ -15,7 +15,7 @@ type Repository interface {
 	appcontext.Component
 	GetSecretByName(secret string, namespace string) (string, error)
 	PostOrPUTSecret(method string, secret string, body []byte) error
-	DeleteSecret(secret string, namespace string) error
+	DeleteSecretK8S(secret string, namespace string) error
 }
 
 // GetRepository func return Repository interface

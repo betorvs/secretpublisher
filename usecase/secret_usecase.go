@@ -123,7 +123,7 @@ func CheckSecret(secretName string) (string, error) {
 // DeleteSecret func
 func DeleteSecret(secretName string) error {
 	secretClient := domain.GetRepository()
-	errGateway := secretClient.DeleteSecret(secretName, config.SecretNamespace)
+	errGateway := secretClient.DeleteSecretK8S(secretName, config.SecretNamespace)
 	if errGateway != nil {
 		errlocal := utils.ErrorHandler(errGateway)
 		return errlocal

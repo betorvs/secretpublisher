@@ -2,10 +2,10 @@ language: go
 go:
 - 1.13.x
 install:
-- curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.22.2
+- curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.8
 script:
-- $(go env GOPATH)/bin/golangci-lint run
-- go test -v -race ./...
+- $(go env GOPATH)/bin/golangci-lint run --timeout 5m
+- TESTRUN="true" go test -v -race ./...
 
 before_script:
 - echo "REPO $TRAVIS_REPO_SLUG TAG ${TRAVIS_TAG}"
