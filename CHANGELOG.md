@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2020-02-08
+### Changed
+- Update golang version to 1.15
+- Removed travis-ci files
+
+### Added
+- Add Labels
+
 ## [0.0.1] - 2019-12-10
 ### Added
 - Sub-commands: create, update, check, delete to manage secrets and exist to check if one secret already exist and is up-to-date.

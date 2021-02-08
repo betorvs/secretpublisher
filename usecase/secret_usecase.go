@@ -66,6 +66,7 @@ func CreateSecret(secretName string) error {
 		Namespace: config.SecretNamespace,
 		Checksum:  createCheckSum(checksum),
 		Data:      config.StringData,
+		Labels:    config.Labels,
 	}
 	bodymarshal, err := json.Marshal(&secret)
 	if err != nil {
@@ -93,6 +94,7 @@ func UpdateSecret(secretName string) error {
 		Namespace: config.SecretNamespace,
 		Checksum:  createCheckSum(checksum),
 		Data:      config.StringData,
+		Labels:    config.Labels,
 	}
 	bodymarshal, err := json.Marshal(&secret)
 	if err != nil {

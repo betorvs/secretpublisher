@@ -29,7 +29,7 @@ func (repo Repository) GetSecretByName(secret string, namespace string) (string,
 	}
 	if config.EncodingRequest != "disabled" {
 		now := time.Now()
-		timestamp := string(now.Unix())
+		timestamp := fmt.Sprintf("%v", now.Unix())
 		req.Header.Add("X-SECRET-Request-Timestamp", timestamp)
 		basestring := fmt.Sprintf("v1:%s:%s", timestamp, secret)
 		signature := createHeaderSignature(timestamp, basestring, config.EncodingRequest)
@@ -67,7 +67,7 @@ func (repo Repository) PostOrPUTSecret(method string, secret string, body []byte
 	}
 	if config.EncodingRequest != "disabled" {
 		now := time.Now()
-		timestamp := string(now.Unix())
+		timestamp := fmt.Sprintf("%v", now.Unix())
 		req.Header.Add("X-SECRET-Request-Timestamp", timestamp)
 		basestring := fmt.Sprintf("v1:%s:%s", timestamp, secret)
 		signature := createHeaderSignature(timestamp, basestring, config.EncodingRequest)
@@ -104,7 +104,7 @@ func (repo Repository) DeleteSecretK8S(secret string, namespace string) error {
 	}
 	if config.EncodingRequest != "disabled" {
 		now := time.Now()
-		timestamp := string(now.Unix())
+		timestamp := fmt.Sprintf("%v", now.Unix())
 		req.Header.Add("X-SECRET-Request-Timestamp", timestamp)
 		basestring := fmt.Sprintf("v1:%s:%s", timestamp, secret)
 		signature := createHeaderSignature(timestamp, basestring, config.EncodingRequest)

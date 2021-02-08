@@ -21,6 +21,8 @@ var (
 	SecretNamespace string
 	// StringData map[string]string
 	StringData map[string]string
+	// Labels map[string]string
+	Labels map[string]string
 	// PublisherTimeout time.Duration
 	PublisherTimeout time.Duration
 	// TestRun string
@@ -30,16 +32,43 @@ var (
 )
 
 // ParseStringData func
-func ParseStringData() map[string]string {
+func ParseStringData(kind string) map[string]string {
 	data := make(map[string]string)
-	if os.Getenv("STRING_DATA") != "" {
-		values := strings.Split(os.Getenv("STRING_DATA"), ",")
-		for _, e := range values {
-			parts := strings.Split(e, "=")
-			data[parts[0]] = parts[1]
+	switch kind {
+	case "data":
+		if os.Getenv("STRING_DATA") != "" {
+			data = ParseLabelsArg(os.Getenv("STRING_DATA"))
+		}
+	case "labels":
+		if os.Getenv("LABELS") != "" {
+			data = ParseLabelsArg(os.Getenv("LABELS"))
 		}
 	}
+
 	return data
+}
+
+// ParseLabelsArg func returns a map[string]string from a string
+func ParseLabelsArg(labelArg string) map[string]string {
+	labels := map[string]string{}
+	if labelArg == "" {
+		return labels
+	}
+
+	if strings.Contains(labelArg, ",") {
+		pairs := strings.Split(labelArg, ",")
+		for _, pair := range pairs {
+			parts := strings.Split(pair, "=")
+			if len(parts) == 2 {
+				labels[parts[0]] = parts[1]
+			}
+		}
+	} else {
+		parts := strings.Split(labelArg, "=")
+		labels[parts[0]] = parts[1]
+	}
+
+	return labels
 }
 
 // ConfigureRootCommand func
@@ -54,7 +83,6 @@ func ConfigureRootCommand() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&TestRun, "testRun", "false", "use TESTRUN environment variable")
 	cmd.PersistentFlags().BoolVar(&Debug, "debug", false, "add --debug in the command")
 	cmd.PersistentFlags().StringVar(&CommandTimeout, "commandTimeout", os.Getenv("COMMAND_TIMEOUT"), "use COMMAND_TIMEOUT environment variable")
-	// cmd.PersistentFlags().StringToStringVar(&StringData, "stringData", getEnv(), "use STRING_DATA environment variable like: name=path_to_file,")
 	return cmd
 }
 

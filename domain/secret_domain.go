@@ -8,6 +8,7 @@ type Secret struct {
 	Namespace string            `json:"namespace"`
 	Checksum  string            `json:"checksum"`
 	Data      map[string]string `json:"data"`
+	Labels    map[string]string `json:"labels"`
 }
 
 // Repository interface

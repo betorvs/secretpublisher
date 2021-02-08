@@ -1,6 +1,6 @@
 module github.com/betorvs/secretpublisher
 
-go 1.13
+go 1.15
 
 require (
 	github.com/spf13/cobra v0.0.6

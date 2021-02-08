@@ -130,11 +130,14 @@ var deleteCmd = &cobra.Command{
 
 func initCommands() {
 	existCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
-	existCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData(), "map for stringData in secret, use: key=value")
+	existCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData("data"), "map for stringData in secret, use: key=value")
+	existCmd.Flags().StringToStringVar(&config.Labels, "labels", config.ParseStringData("labels"), "map for labels in secret, use: key=value")
 	createCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
-	createCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData(), "map for stringData in secret, use: key=value")
+	createCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData("data"), "map for stringData in secret, use: key=value")
+	createCmd.Flags().StringToStringVar(&config.Labels, "labels", config.ParseStringData("labels"), "map for labels in secret, use: key=value")
 	updateCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
-	updateCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData(), "map for stringData in secret, use: key=value")
+	updateCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData("data"), "map for stringData in secret, use: key=value")
+	updateCmd.Flags().StringToStringVar(&config.Labels, "labels", config.ParseStringData("labels"), "map for labels in secret, use: key=value")
 	checkCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
 	deleteCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
 }
