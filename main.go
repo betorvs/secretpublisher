@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/betorvs/secretpublisher/config"
 	_ "github.com/betorvs/secretpublisher/gateway/secret"
@@ -171,6 +172,29 @@ var scanCMCmd = &cobra.Command{
 	},
 }
 
+var scanSecretsValuesCmd = &cobra.Command{
+	Use:   "secret-subvalue",
+	Short: "secret-subvalue label=value",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) > 1 {
+			return errors.New("[ERROR] Need label=value")
+		}
+		if !strings.Contains(config.MatchKey, ".") {
+			return errors.New("--matchKey key.subkey")
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		labels := args[0]
+		res, err := usecase.ScanSubvalueSecret(labels)
+		if err != nil {
+			fmt.Printf("%v", err)
+			os.Exit(2)
+		}
+		fmt.Printf("%s", res)
+	},
+}
+
 func initCommands() {
 	existCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
 	existCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData("data"), "map for stringData in secret, use: key=value")
@@ -192,12 +216,18 @@ func initCommands() {
 	scanCMCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
 	scanCMCmd.Flags().StringVar(&config.DestinationNamespace, "destinationNamespace", os.Getenv("DESTINATION_NAMESPACE"), "Destination Secret namespace in Secret Receiver")
 	scanCMCmd.Flags().StringVar(&config.NameSuffix, "nameSuffix", os.Getenv("NAME_SUFFIX"), "Destination Secret name suffix in Secret Receiver")
+	scanSecretsValuesCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
+	scanSecretsValuesCmd.Flags().StringVar(&config.DestinationNamespace, "destinationNamespace", os.Getenv("DESTINATION_NAMESPACE"), "Destination Secret namespace in Secret Receiver")
+	scanSecretsValuesCmd.Flags().StringVar(&config.NameSuffix, "nameSuffix", os.Getenv("NAME_SUFFIX"), "Destination Secret name suffix in Secret Receiver from value in Secret")
+	scanSecretsValuesCmd.Flags().StringVar(&config.MatchKey, "matchKey", os.Getenv("MATCH_KEY"), "Key inside Secret to be exported to Secret Receiver")
+	scanSecretsValuesCmd.Flags().StringVar(&config.NewLabels, "newLabels", os.Getenv("NEW_LABELS"), "New Labels to be exported to Secret Receiver")
+	scanSecretsValuesCmd.Flags().StringVar(&config.NewAnnotations, "newAnnotations", os.Getenv("NEW_ANNOTATIONS"), "New Annotations to be exported to Secret Receiver")
 }
 
 func main() {
 	rootCmd := config.ConfigureRootCommand()
 	initCommands()
-	rootCmd.AddCommand(versionCmd, existCmd, createCmd, updateCmd, checkCmd, deleteCmd, scanSecretsCmd, scanCMCmd)
+	rootCmd.AddCommand(versionCmd, existCmd, createCmd, updateCmd, checkCmd, deleteCmd, scanSecretsCmd, scanCMCmd, scanSecretsValuesCmd)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR]: %v\n", err)
 		os.Exit(1)

@@ -4,11 +4,13 @@ import (
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/betorvs/secretpublisher/config"
 	"github.com/betorvs/secretpublisher/domain"
 	"github.com/betorvs/secretpublisher/gateway/kubeclient"
 	"github.com/betorvs/secretpublisher/utils"
+	"gopkg.in/yaml.v2"
 )
 
 // GenerateSecret func uses generates a secret struct from flags
@@ -144,17 +146,13 @@ func ScanSecret(labels string) (string, error) {
 		errlocal := utils.ErrorHandler(errGateway)
 		return "", errlocal
 	}
-	// fmt.Printf("%#v\n", res)
 	// create a loop to check using manage secret
 	if len(res.Items) == 0 {
-		// fmt.Println(len(res.Items))
 		return fmt.Sprintf("Secrets with label %s not found\n", labels), nil
 	}
 	var countErrors int
 	var countErrorsNames []string
 	for _, item := range res.Items {
-		// fmt.Println(item.Name)
-
 		data := make(map[string]string)
 		for k, v := range item.Data {
 			data[k] = string(v)
@@ -230,4 +228,78 @@ func rewriteSecret(secretName, namespace string, data, labels, annotations map[s
 		Annotations: annotations,
 	}
 	return secret
+}
+
+// ScanSubvalueSecret func
+func ScanSubvalueSecret(labels string) (string, error) {
+	res, errGateway := kubeclient.GetSecrets(config.SecretNamespace, labels)
+	if errGateway != nil {
+		errlocal := utils.ErrorHandler(errGateway)
+		return "", errlocal
+	}
+	// create a loop to check using manage secret
+	if len(res.Items) == 0 {
+		return fmt.Sprintf("Secrets with label %s not found\n", labels), nil
+	}
+	var countErrors int
+	var countErrorsNames []string
+	for _, item := range res.Items {
+		data := make(map[string]string)
+		var suffixName, key, subkey string
+		if strings.Contains(config.MatchKey, ".") {
+			splited := strings.Split(config.MatchKey, ".")
+			key = splited[0]
+			subkey = splited[1]
+		}
+		for k, v := range item.Data {
+			if k == config.NameSuffix {
+				suffixName = string(v)
+			}
+			if k == key {
+				temp := make(map[string]string)
+				err := yaml.Unmarshal(v, &temp)
+				if err != nil {
+					fmt.Println("fail in Unmarshal")
+					countErrors++
+				}
+				if subkey != "" {
+					data[subkey] = temp[subkey]
+				}
+			}
+
+		}
+		destination := config.DestinationNamespace
+		if destination == "" {
+			destination = item.Namespace
+		}
+		labels := make(map[string]string)
+		if config.NewLabels != "" {
+			if strings.Contains(config.NewLabels, "=") {
+				splited := strings.Split(config.NewLabels, "=")
+				labels[splited[0]] = splited[1]
+			}
+		}
+		annotations := make(map[string]string)
+		if config.NewAnnotations != "" {
+			if strings.Contains(config.NewAnnotations, "=") {
+				splited := strings.Split(config.NewAnnotations, "=")
+				annotations[splited[0]] = splited[1]
+			}
+		}
+		name := fmt.Sprintf("%s-%s-%s", item.Name, subkey, suffixName)
+		localName := fmt.Sprintf("%s-%s", subkey, suffixName)
+		localData := map[string]string{
+			localName: data[subkey],
+		}
+		newSecret := rewriteSecret(name, destination, localData, labels, annotations)
+		err := ManageSecret(name, newSecret)
+		if err != nil {
+			countErrors++
+			countErrorsNames = append(countErrorsNames, item.Name)
+		}
+	}
+	if countErrors != 0 {
+		return "NOK", fmt.Errorf("Cannot process these secrets: %v", countErrorsNames)
+	}
+	return "OK", nil
 }

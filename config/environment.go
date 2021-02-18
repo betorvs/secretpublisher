@@ -35,6 +35,12 @@ var (
 	DestinationNamespace string
 	// NameSuffix string
 	NameSuffix string
+	// MatchKey string
+	MatchKey string
+	// NewLabels string
+	NewLabels string
+	// NewAnnotations string
+	NewAnnotations string
 	// Debug bool
 	Debug bool
 )

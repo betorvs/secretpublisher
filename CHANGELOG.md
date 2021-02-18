@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.3] - 2021-02-18
 ### Added
 - scan-secrets and scan-configmaps to scan secrets or config maps using a label to search and copy them to secret receiver
+- secret-subvalue command to scan secrets and sync just a subkey.
 
 
 ## [0.0.2] - 2021-02-08
