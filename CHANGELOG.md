@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.2] - 2020-02-08
+## [0.0.3] - 2021-02-18
+### Added
+- scan-secrets and scan-configmaps to scan secrets or config maps using a label to search and copy them to secret receiver
+
+
+## [0.0.2] - 2021-02-08
 ### Changed
 - Update golang version to 1.15
 - Removed travis-ci files

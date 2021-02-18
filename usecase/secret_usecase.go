@@ -7,18 +7,32 @@ import (
 
 	"github.com/betorvs/secretpublisher/config"
 	"github.com/betorvs/secretpublisher/domain"
+	"github.com/betorvs/secretpublisher/gateway/kubeclient"
 	"github.com/betorvs/secretpublisher/utils"
 )
 
-// ManageSecret func
-func ManageSecret(secretName string) error {
-	// check if secret exist
+// GenerateSecret func uses generates a secret struct from flags
+func GenerateSecret(secretName string) *domain.Secret {
 	var checksum string
 	for _, v := range config.StringData {
 		checksum += v
 	}
-	test := createCheckSum(checksum)
-	res, err := CheckSecret(secretName)
+	secret := &domain.Secret{
+		Name:        secretName,
+		Namespace:   config.SecretNamespace,
+		Checksum:    createCheckSum(checksum),
+		Data:        config.StringData,
+		Labels:      config.Labels,
+		Annotations: config.Annotations,
+	}
+	return secret
+}
+
+// ManageSecret func
+func ManageSecret(secretName string, secret *domain.Secret) error {
+	// check if secret exist
+	test := secret.Checksum
+	res, err := CheckSecret(secretName, secret.Namespace)
 	if err != nil {
 		return err
 	}
@@ -34,7 +48,7 @@ func ManageSecret(secretName string) error {
 			if config.Debug {
 				fmt.Println("[DEBUG] Updating")
 			}
-			errUpdate := UpdateSecret(secretName)
+			errUpdate := UpdateSecret(secretName, secret)
 			if errUpdate != nil {
 				return errUpdate
 			}
@@ -44,7 +58,7 @@ func ManageSecret(secretName string) error {
 		if config.Debug {
 			fmt.Println("[DEBUG] Creating")
 		}
-		errCreate := CreateSecret(secretName)
+		errCreate := CreateSecret(secretName, secret)
 		if errCreate != nil {
 			return errCreate
 		}
@@ -55,19 +69,8 @@ func ManageSecret(secretName string) error {
 }
 
 // CreateSecret func
-func CreateSecret(secretName string) error {
+func CreateSecret(secretName string, secret *domain.Secret) error {
 	secretClient := domain.GetRepository()
-	var checksum string
-	for _, v := range config.StringData {
-		checksum += v
-	}
-	secret := &domain.Secret{
-		Name:      secretName,
-		Namespace: config.SecretNamespace,
-		Checksum:  createCheckSum(checksum),
-		Data:      config.StringData,
-		Labels:    config.Labels,
-	}
 	bodymarshal, err := json.Marshal(&secret)
 	if err != nil {
 		errlocal := utils.ErrorHandler(err)
@@ -83,19 +86,8 @@ func CreateSecret(secretName string) error {
 }
 
 // UpdateSecret func
-func UpdateSecret(secretName string) error {
+func UpdateSecret(secretName string, secret *domain.Secret) error {
 	secretClient := domain.GetRepository()
-	var checksum string
-	for _, v := range config.StringData {
-		checksum += v
-	}
-	secret := &domain.Secret{
-		Name:      secretName,
-		Namespace: config.SecretNamespace,
-		Checksum:  createCheckSum(checksum),
-		Data:      config.StringData,
-		Labels:    config.Labels,
-	}
 	bodymarshal, err := json.Marshal(&secret)
 	if err != nil {
 		errlocal := utils.ErrorHandler(err)
@@ -111,9 +103,9 @@ func UpdateSecret(secretName string) error {
 }
 
 // CheckSecret func
-func CheckSecret(secretName string) (string, error) {
+func CheckSecret(secretName, namespace string) (string, error) {
 	secretClient := domain.GetRepository()
-	res, errGateway := secretClient.GetSecretByName(secretName, config.SecretNamespace)
+	res, errGateway := secretClient.GetSecretByName(secretName, namespace)
 	if errGateway != nil {
 		errlocal := utils.ErrorHandler(errGateway)
 		return "", errlocal
@@ -144,4 +136,99 @@ func createCheckSum(value string) string {
 	}
 	checksum := fmt.Sprintf("%x", shasum.Sum(nil))
 	return checksum
+}
+
+// ScanSecret func
+func ScanSecret(labels string) (string, error) {
+	res, errGateway := kubeclient.GetSecrets(config.SecretNamespace, labels)
+	if errGateway != nil {
+		errlocal := utils.ErrorHandler(errGateway)
+		return "", errlocal
+	}
+	// fmt.Printf("%#v\n", res)
+	// create a loop to check using manage secret
+	if len(res.Items) == 0 {
+		// fmt.Println(len(res.Items))
+		return fmt.Sprintf("Secrets with label %s not found\n", labels), nil
+	}
+	var countErrors int
+	var countErrorsNames []string
+	for _, item := range res.Items {
+		// fmt.Println(item.Name)
+
+		data := make(map[string]string)
+		for k, v := range item.Data {
+			data[k] = string(v)
+		}
+		destination := config.DestinationNamespace
+		if destination == "" {
+			destination = item.Namespace
+		}
+		name := item.Name
+		if config.NameSuffix != "" {
+			name = fmt.Sprintf("%s-%s", item.Name, config.NameSuffix)
+		}
+		newSecret := rewriteSecret(name, destination, data, item.Labels, item.Annotations)
+		err := ManageSecret(name, newSecret)
+		if err != nil {
+			countErrors++
+			countErrorsNames = append(countErrorsNames, item.Name)
+		}
+	}
+	if countErrors != 0 {
+		return "NOK", fmt.Errorf("Cannot process these secrets: %v", countErrorsNames)
+	}
+	return "OK", nil
+}
+
+// ScanConfigMap func
+func ScanConfigMap(labels string) (string, error) {
+	res, errGateway := kubeclient.GetConfigMaps(config.SecretNamespace, labels)
+	if errGateway != nil {
+		errlocal := utils.ErrorHandler(errGateway)
+		return "", errlocal
+	}
+	var countErrors int
+	var countErrorsNames []string
+	for _, item := range res.Items {
+		data := make(map[string]string)
+		for k, v := range item.Data {
+			data[k] = string(v)
+		}
+		destination := config.DestinationNamespace
+		if destination == "" {
+			destination = item.Namespace
+		}
+		name := item.Name
+		if config.NameSuffix != "" {
+			name = fmt.Sprintf("%s-%s", item.Name, config.NameSuffix)
+		}
+		newSecret := rewriteSecret(name, destination, data, item.Labels, item.Annotations)
+		err := ManageSecret(name, newSecret)
+		if err != nil {
+			countErrors++
+			countErrorsNames = append(countErrorsNames, item.Name)
+		}
+	}
+	if countErrors != 0 {
+		return "NOK", fmt.Errorf("Cannot process these config maps: %v", countErrorsNames)
+	}
+	return "OK", nil
+}
+
+// local rewrite func to rewrite secret and config map from K8S
+func rewriteSecret(secretName, namespace string, data, labels, annotations map[string]string) *domain.Secret {
+	var checksum string
+	for _, v := range data {
+		checksum += v
+	}
+	secret := &domain.Secret{
+		Name:        secretName,
+		Namespace:   namespace,
+		Checksum:    createCheckSum(checksum),
+		Data:        data,
+		Labels:      labels,
+		Annotations: annotations,
+	}
+	return secret
 }

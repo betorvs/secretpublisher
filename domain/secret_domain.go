@@ -1,14 +1,17 @@
 package domain
 
-import "github.com/betorvs/secretpublisher/appcontext"
+import (
+	"github.com/betorvs/secretpublisher/appcontext"
+)
 
 // Secret struct
 type Secret struct {
-	Name      string            `json:"name"`
-	Namespace string            `json:"namespace"`
-	Checksum  string            `json:"checksum"`
-	Data      map[string]string `json:"data"`
-	Labels    map[string]string `json:"labels"`
+	Name        string            `json:"name"`
+	Namespace   string            `json:"namespace"`
+	Checksum    string            `json:"checksum"`
+	Data        map[string]string `json:"data"`
+	Labels      map[string]string `json:"labels"`
+	Annotations map[string]string `json:"annotations"`
 }
 
 // Repository interface

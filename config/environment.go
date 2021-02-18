@@ -23,10 +23,18 @@ var (
 	StringData map[string]string
 	// Labels map[string]string
 	Labels map[string]string
+	// Annotations map[string]string
+	Annotations map[string]string
 	// PublisherTimeout time.Duration
 	PublisherTimeout time.Duration
 	// TestRun string
 	TestRun string
+	// LocalKubeconfig bool
+	LocalKubeconfig bool
+	// DestinationNamespace string
+	DestinationNamespace string
+	// NameSuffix string
+	NameSuffix string
 	// Debug bool
 	Debug bool
 )
@@ -42,6 +50,10 @@ func ParseStringData(kind string) map[string]string {
 	case "labels":
 		if os.Getenv("LABELS") != "" {
 			data = ParseLabelsArg(os.Getenv("LABELS"))
+		}
+	case "annotations":
+		if os.Getenv("ANNOTATIONS") != "" {
+			data = ParseLabelsArg(os.Getenv("ANNOTATIONS"))
 		}
 	}
 
@@ -81,6 +93,7 @@ func ConfigureRootCommand() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&EncodingRequest, "encodingRequest", os.Getenv("ENCODING_REQUEST"), "use ENCODING_REQUEST environment variable")
 	cmd.PersistentFlags().StringVar(&ReceiverURL, "receiverURL", os.Getenv("RECEIVER_URL"), "use RECEIVER_URL environment variable")
 	cmd.PersistentFlags().StringVar(&TestRun, "testRun", "false", "use TESTRUN environment variable")
+	cmd.PersistentFlags().BoolVar(&LocalKubeconfig, "localKubeconfig", false, "use local kubeconfig file")
 	cmd.PersistentFlags().BoolVar(&Debug, "debug", false, "add --debug in the command")
 	cmd.PersistentFlags().StringVar(&CommandTimeout, "commandTimeout", os.Getenv("COMMAND_TIMEOUT"), "use COMMAND_TIMEOUT environment variable")
 	return cmd

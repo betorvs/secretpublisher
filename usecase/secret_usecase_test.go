@@ -49,7 +49,7 @@ func (repo RepositoryMock) DeleteSecretK8S(secret string, namespace string) erro
 func TestCheckSecret(t *testing.T) {
 	repo := RepositoryMock{}
 	appcontext.Current.Add(appcontext.Repository, repo)
-	_, err := CheckSecret("foo")
+	_, err := CheckSecret("foo", "default")
 	assert.NoError(t, err)
 	expected := 1
 	if RepositoryGetSecretByNameCalls != expected {
@@ -60,7 +60,8 @@ func TestCheckSecret(t *testing.T) {
 func TestCreateSecret(t *testing.T) {
 	repo := RepositoryMock{}
 	appcontext.Current.Add(appcontext.Repository, repo)
-	err := CreateSecret("foo")
+	secret := GenerateSecret("foo")
+	err := CreateSecret("foo", secret)
 	assert.NoError(t, err)
 	expected := 1
 	if RepositoryPostSecretCalls != expected {
@@ -71,7 +72,8 @@ func TestCreateSecret(t *testing.T) {
 func TestUpdateSecret(t *testing.T) {
 	repo := RepositoryMock{}
 	appcontext.Current.Add(appcontext.Repository, repo)
-	err := UpdateSecret("foo")
+	secret := GenerateSecret("foo")
+	err := UpdateSecret("foo", secret)
 	assert.NoError(t, err)
 	expected := 1
 	if RepositoryPUTSecretCalls != expected {
@@ -94,6 +96,7 @@ func TestDeleteSecret(t *testing.T) {
 func TestManageSecret(t *testing.T) {
 	repo := RepositoryMock{}
 	appcontext.Current.Add(appcontext.Repository, repo)
-	test := ManageSecret("foo")
+	secret := GenerateSecret("foo")
+	test := ManageSecret("foo", secret)
 	assert.NoError(t, test)
 }

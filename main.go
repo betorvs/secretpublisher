@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/betorvs/secretpublisher/config"
-	_ "github.com/betorvs/secretpublisher/gateway"
+	_ "github.com/betorvs/secretpublisher/gateway/secret"
 	"github.com/betorvs/secretpublisher/usecase"
 	"github.com/spf13/cobra"
 )
@@ -43,7 +43,8 @@ var existCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		secretName := args[0]
-		err := usecase.ManageSecret(secretName)
+		secret := usecase.GenerateSecret(secretName)
+		err := usecase.ManageSecret(secretName, secret)
 		if err != nil {
 			fmt.Printf("%v", err)
 			os.Exit(2)
@@ -62,7 +63,8 @@ var createCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		secretName := args[0]
-		err := usecase.CreateSecret(secretName)
+		secret := usecase.GenerateSecret(secretName)
+		err := usecase.CreateSecret(secretName, secret)
 		if err != nil {
 			fmt.Printf("%v", err)
 			os.Exit(2)
@@ -81,7 +83,8 @@ var updateCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		secretName := args[0]
-		err := usecase.UpdateSecret(secretName)
+		secret := usecase.GenerateSecret(secretName)
+		err := usecase.UpdateSecret(secretName, secret)
 		if err != nil {
 			fmt.Printf("%v", err)
 			os.Exit(2)
@@ -100,7 +103,7 @@ var checkCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		secretName := args[0]
-		res, err := usecase.CheckSecret(secretName)
+		res, err := usecase.CheckSecret(secretName, config.SecretNamespace)
 		if err != nil {
 			fmt.Printf("%v", err)
 			os.Exit(2)
@@ -128,24 +131,73 @@ var deleteCmd = &cobra.Command{
 	},
 }
 
+var scanSecretsCmd = &cobra.Command{
+	Use:   "scan-secrets",
+	Short: "scan-secrets label=value",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) > 1 {
+			return errors.New("[ERROR] Need label=value")
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		labels := args[0]
+		res, err := usecase.ScanSecret(labels)
+		if err != nil {
+			fmt.Printf("%v", err)
+			os.Exit(2)
+		}
+		fmt.Printf("%s", res)
+	},
+}
+
+var scanCMCmd = &cobra.Command{
+	Use:   "scan-configmaps",
+	Short: "scan-configmaps label=value",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) > 1 {
+			return errors.New("[ERROR] Need label=value")
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		labels := args[0]
+		res, err := usecase.ScanConfigMap(labels)
+		if err != nil {
+			fmt.Printf("%v", err)
+			os.Exit(2)
+		}
+		fmt.Printf("%s", res)
+	},
+}
+
 func initCommands() {
 	existCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
 	existCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData("data"), "map for stringData in secret, use: key=value")
 	existCmd.Flags().StringToStringVar(&config.Labels, "labels", config.ParseStringData("labels"), "map for labels in secret, use: key=value")
+	existCmd.Flags().StringToStringVar(&config.Annotations, "annotations", config.ParseStringData("annotations"), "map for annotations in secret, use: key=value")
 	createCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
 	createCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData("data"), "map for stringData in secret, use: key=value")
 	createCmd.Flags().StringToStringVar(&config.Labels, "labels", config.ParseStringData("labels"), "map for labels in secret, use: key=value")
+	createCmd.Flags().StringToStringVar(&config.Annotations, "annotations", config.ParseStringData("annotations"), "map for annotations in secret, use: key=value")
 	updateCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
 	updateCmd.Flags().StringToStringVar(&config.StringData, "stringData", config.ParseStringData("data"), "map for stringData in secret, use: key=value")
 	updateCmd.Flags().StringToStringVar(&config.Labels, "labels", config.ParseStringData("labels"), "map for labels in secret, use: key=value")
+	updateCmd.Flags().StringToStringVar(&config.Annotations, "annotations", config.ParseStringData("annotations"), "map for annotations in secret, use: key=value")
 	checkCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
 	deleteCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
+	scanSecretsCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
+	scanSecretsCmd.Flags().StringVar(&config.DestinationNamespace, "destinationNamespace", os.Getenv("DESTINATION_NAMESPACE"), "Destination Secret namespace in Secret Receiver")
+	scanSecretsCmd.Flags().StringVar(&config.NameSuffix, "nameSuffix", os.Getenv("NAME_SUFFIX"), "Destination Secret name suffix in Secret Receiver")
+	scanCMCmd.Flags().StringVar(&config.SecretNamespace, "secretNamespace", os.Getenv("SECRET_NAMESPACE"), "Secret namespace in Kubernetes")
+	scanCMCmd.Flags().StringVar(&config.DestinationNamespace, "destinationNamespace", os.Getenv("DESTINATION_NAMESPACE"), "Destination Secret namespace in Secret Receiver")
+	scanCMCmd.Flags().StringVar(&config.NameSuffix, "nameSuffix", os.Getenv("NAME_SUFFIX"), "Destination Secret name suffix in Secret Receiver")
 }
 
 func main() {
 	rootCmd := config.ConfigureRootCommand()
 	initCommands()
-	rootCmd.AddCommand(versionCmd, existCmd, createCmd, updateCmd, checkCmd, deleteCmd)
+	rootCmd.AddCommand(versionCmd, existCmd, createCmd, updateCmd, checkCmd, deleteCmd, scanSecretsCmd, scanCMCmd)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR]: %v\n", err)
 		os.Exit(1)
