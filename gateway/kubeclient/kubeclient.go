@@ -43,6 +43,7 @@ func lazyInit() *kubernetes.Clientset {
 	if err != nil {
 		panic(err.Error())
 	}
+
 	return clientset
 }
 

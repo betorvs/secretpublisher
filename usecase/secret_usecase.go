@@ -41,8 +41,7 @@ func ManageSecret(secretName string, secret *domain.Secret) error {
 			fmt.Printf("[DEBUG] Checking %s, %s, %s ", secretName, config.SecretNamespace, res)
 		}
 		parsedRes := utils.RemoveQuotes(res)
-		check := test == parsedRes
-		if check {
+		if test == parsedRes {
 			fmt.Printf("[OK] Secret %s already exist\n", secretName)
 		} else {
 			if config.Debug {
