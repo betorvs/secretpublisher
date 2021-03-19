@@ -244,6 +244,12 @@ func ScanSubvalueSecret(labels string) (string, error) {
 	var countErrors int
 	var countErrorsNames []string
 	for _, item := range res.Items {
+		if config.DisabledLabel != "" {
+			if searchLabels(config.DisabledLabel, item.Labels) {
+				fmt.Printf("Skiping secret %s \n", item.Name)
+				continue
+			}
+		}
 		data := make(map[string]string)
 		var suffixName, key, subkey string
 		if strings.Contains(config.MatchKey, ".") {
@@ -256,12 +262,15 @@ func ScanSubvalueSecret(labels string) (string, error) {
 				suffixName = string(v)
 			}
 			if k == key {
+				// fmt.Println(k)
 				temp := make(map[string]string)
 				err := yaml.Unmarshal(v, &temp)
 				if err != nil {
 					fmt.Println("fail in Unmarshal")
 					countErrors++
 				}
+				// fmt.Println(temp)
+				// if subkey is not empty
 				if subkey != "" {
 					data[subkey] = temp[subkey]
 				}
@@ -288,9 +297,14 @@ func ScanSubvalueSecret(labels string) (string, error) {
 		}
 		name := fmt.Sprintf("%s-%s-%s", item.Name, subkey, suffixName)
 		localName := fmt.Sprintf("%s-%s", subkey, suffixName)
+		if config.MiddleName != "" {
+			localName = fmt.Sprintf("%s-%s-%s", subkey, config.MiddleName, suffixName)
+		}
+		fmt.Println(localName)
 		localData := map[string]string{
 			localName: data[subkey],
 		}
+		fmt.Println(localData)
 		newSecret := rewriteSecret(name, destination, localData, labels, annotations)
 		err := ManageSecret(name, newSecret)
 		if err != nil {
@@ -302,4 +316,30 @@ func ScanSubvalueSecret(labels string) (string, error) {
 		return "NOK", fmt.Errorf("Cannot process these secrets: %v", countErrorsNames)
 	}
 	return "OK", nil
+}
+
+func searchLabels(label string, labels map[string]string) bool {
+	var key, value string
+	if strings.Contains(label, "=") {
+		splited := strings.Split(label, "=")
+		key = splited[0]
+		value = splited[1]
+	} else {
+		key = label
+	}
+	if len(labels) == 0 {
+		return false
+	}
+	for k, v := range labels {
+		if value != "" && k == key && v == value {
+			return true
+		}
+		if value == "" {
+			if k == key {
+				return true
+			}
+		}
+
+	}
+	return false
 }

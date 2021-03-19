@@ -41,6 +41,10 @@ var (
 	NewLabels string
 	// NewAnnotations string
 	NewAnnotations string
+	// DisabledLabel string
+	DisabledLabel string
+	// MiddleName string
+	MiddleName string
 	// Debug bool
 	Debug bool
 )

@@ -222,6 +222,8 @@ func initCommands() {
 	scanSecretsValuesCmd.Flags().StringVar(&config.MatchKey, "matchKey", os.Getenv("MATCH_KEY"), "Key inside Secret to be exported to Secret Receiver")
 	scanSecretsValuesCmd.Flags().StringVar(&config.NewLabels, "newLabels", os.Getenv("NEW_LABELS"), "New Labels to be exported to Secret Receiver")
 	scanSecretsValuesCmd.Flags().StringVar(&config.NewAnnotations, "newAnnotations", os.Getenv("NEW_ANNOTATIONS"), "New Annotations to be exported to Secret Receiver")
+	scanSecretsValuesCmd.Flags().StringVar(&config.DisabledLabel, "disabledLabel", os.Getenv("DISABLED_LABEL"), "Label to not export to Secret Receiver")
+	scanSecretsValuesCmd.Flags().StringVar(&config.MiddleName, "middleName", os.Getenv("MIDDLE_NAME"), "Add middle name in secret data name before sending to Secret Receiver")
 }
 
 func main() {
