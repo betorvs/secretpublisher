@@ -300,11 +300,11 @@ func ScanSubvalueSecret(labels string) (string, error) {
 		if config.MiddleName != "" {
 			localName = fmt.Sprintf("%s-%s-%s", subkey, config.MiddleName, suffixName)
 		}
-		fmt.Println(localName)
+		// fmt.Println(localName)
 		localData := map[string]string{
 			localName: data[subkey],
 		}
-		fmt.Println(localData)
+		// fmt.Println(localData)
 		newSecret := rewriteSecret(name, destination, localData, labels, annotations)
 		err := ManageSecret(name, newSecret)
 		if err != nil {
