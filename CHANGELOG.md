@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6]
+### Changed 
+- changed flag `--nameSuffix` to `--keyNameSuffix` to be more clean
+- changed flag `--nameSuffix` to append into secret name
+
+## [0.0.5]
+### Changed
+- changed flag `--middleName` to not print values
+
+## [0.0.4] 
+### Added
+- add flag `--middleName` to add extra name inside secret key.
+
 ## [0.0.3] - 2021-02-18
 ### Added
 - scan-secrets and scan-configmaps to scan secrets or config maps using a label to search and copy them to secret receiver

@@ -258,7 +258,7 @@ func ScanSubvalueSecret(labels string) (string, error) {
 			subkey = splited[1]
 		}
 		for k, v := range item.Data {
-			if k == config.NameSuffix {
+			if k == config.KeyNameSuffix {
 				suffixName = string(v)
 			}
 			if k == key {
@@ -296,6 +296,9 @@ func ScanSubvalueSecret(labels string) (string, error) {
 			}
 		}
 		name := fmt.Sprintf("%s-%s-%s", item.Name, subkey, suffixName)
+		if config.NameSuffix != "" {
+			name = fmt.Sprintf("%s-%s-%s-%s", item.Name, subkey, suffixName, config.NameSuffix)
+		}
 		localName := fmt.Sprintf("%s-%s", subkey, suffixName)
 		if config.MiddleName != "" {
 			localName = fmt.Sprintf("%s-%s-%s", subkey, config.MiddleName, suffixName)
